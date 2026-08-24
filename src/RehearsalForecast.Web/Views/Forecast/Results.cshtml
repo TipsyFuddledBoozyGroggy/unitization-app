@@ -1,0 +1,368 @@
+@*
+    Results.cshtml — the rehearsal-forecast results page (Design §11.3, §13.3,
+    §14.2).
+
+    Rendered by `ForecastController.Calculate` (POST /Forecast/Calculate) on
+    successful validation. Model is a `ForecastResultViewModel` that carries:
+
+      * `Inputs`               — the round-tripped `ForecastInputViewModel`.
+                                 Emitted as hidden form fields inside the
+                                 "Export CSV" form so `ExportCsv` can re-run
+                                 the same validate → solve → export pipeline
+                                 without any server-side state
+                                 (Design §11.6, Requirement 18.8).
+      * `Result`               — the successful `ForecastResult`. Null when
+                                 the solver failed.
+      * `SolverFailureMessage` — a human-readable message when the solver
+                                 breached its safety limit (Requirement 15.11,
+                                 27.7). When non-null, this view MUST suppress
+                                 `Flat_Price_Per_Sqft`, the 36-row detail
+                                 table, and the CSV export form (Design §14.2).
+
+    Currency values ($0.00 with two decimals) are formatted with
+    `CultureInfo.GetCultureInfo("en-US")` so the presentation is stable
+    regardless of thread culture. Currency-parseable hidden field values use
+    `CultureInfo.InvariantCulture` (period decimal separator, no grouping) to
+    match the input-page model binders (see `MonthlyScheduleModelBinder` and
+    `OccupancyScheduleModelBinder`).
+*@
+@model ForecastResultViewModel
+@using System.Globalization
+@using RehearsalForecast.Core.Constants
+@using RehearsalForecast.Core.Schedules
+
+@{
+    ViewData["Title"] = "Results";
+
+    // en-US drives every visible number, currency, and percent format on the
+    // page. Requirement 16.6 requires `$0.00` with two decimals; the "C"
+    // format specifier under en-US yields exactly that shape.
+    var enUs = CultureInfo.GetCultureInfo("en-US");
+
+    // Invariant culture is used for hidden-field values that will be round-
+    // tripped through the ASP.NET Core model binders. Period is the decimal
+    // separator; there is no thousands separator. This matches the CSV
+    // number format (Design §12.2) and parses correctly under the en-US
+    // request-localization pinning enforced in Program.cs.
+    var inv = CultureInfo.InvariantCulture;
+
+    // Solver-failure gating (Requirement 27.7, Design §14.2). When the
+    // solver breaches its safety limit the view shows a prominent warning
+    // banner and suppresses Flat_Price_Per_Sqft, the 36-row detail table,
+    // and the CSV export form.
+    var solverFailed = Model.SolverFailureMessage is not null;
+    var forecast = Model.Result;
+}
+
+<h1>Rehearsal Forecast — Results</h1>
+
+@if (solverFailed)
+{
+    <div class="alert alert-warning" role="alert">
+        <strong>Solver failure.</strong>
+        <p class="alert__message">@Model.SolverFailureMessage</p>
+        <p class="alert__hint">
+            No target price could be produced for the current inputs. Adjust
+            the inputs and try again.
+        </p>
+        <p>
+            <a class="btn btn-secondary" href="@Url.Action("Index", "Forecast")">
+                Back to inputs
+            </a>
+        </p>
+    </div>
+}
+else if (forecast is not null)
+{
+    @* --------------------------------------------------------------------
+       1. Prominent price display (Requirements 16.1, 16.2, 16.6, Design §13.3)
+       -------------------------------------------------------------------- *@
+    <section class="section results-hero" aria-labelledby="results-price-heading">
+        <h2 id="results-price-heading" class="visually-hidden">Target price</h2>
+
+        <div class="results-hero__grid">
+            <div class="results-hero__card">
+                <div class="results-hero__label">36-month flat price per sqft</div>
+                <div class="results-hero__value">
+                    @forecast.FlatPricePerSqft.ToString("C", enUs)
+                </div>
+                <div class="results-hero__caption">
+                    applies to the entire 36-month period
+                </div>
+            </div>
+
+            <div class="results-hero__card">
+                <div class="results-hero__label">Monthly equivalent</div>
+                <div class="results-hero__value">
+                    @forecast.MonthlyPricePerSqft.ToString("C", enUs)
+                </div>
+                <div class="results-hero__caption">
+                    Monthly equivalent = 36-month flat price / 36
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @* --------------------------------------------------------------------
+       2. Summary metrics (Requirement 16.4, Design §13.3)
+       -------------------------------------------------------------------- *@
+    <section class="section" aria-labelledby="results-summary-heading">
+        <h2 id="results-summary-heading">Summary</h2>
+        <dl class="summary-grid">
+            <dt>Total Capital</dt>
+            <dd>@forecast.TotalCapital.ToString("C", enUs)</dd>
+
+            <dt>Owner Investment</dt>
+            <dd>@forecast.OwnerInvestment.ToString("C", enUs)</dd>
+
+            <dt>Loan Proceeds</dt>
+            <dd>@forecast.LoanProceeds.ToString("C", enUs)</dd>
+
+            <dt>Rentable Sqft</dt>
+            <dd>@forecast.RentableSqft.ToString("N2", enUs)</dd>
+
+            <dt>Total Rental Units</dt>
+            <dd>@forecast.TotalRentalUnits.ToString("N0", enUs)</dd>
+        </dl>
+    </section>
+
+    @* --------------------------------------------------------------------
+       3. Cash-positive block (Requirements 14.5, 16.3, Design §13.3)
+       -------------------------------------------------------------------- *@
+    <section class="section" aria-labelledby="results-cashpositive-heading">
+        <h2 id="results-cashpositive-heading">Cash-positive rule</h2>
+        <dl class="summary-grid">
+            <dt>Target Cash-Positive Month</dt>
+            <dd>@forecast.TargetCashPositiveMonth.ToString("N0", enUs)</dd>
+
+            <dt>Cash-Positive Rule Satisfied</dt>
+            <dd>@(forecast.CashPositiveRuleSatisfied ? "Yes" : "No")</dd>
+
+            <dt>First Sustained Nonnegative Month</dt>
+            <dd>
+                @(forecast.FirstSustainedNonnegativeMonth.HasValue
+                    ? forecast.FirstSustainedNonnegativeMonth.Value.ToString("N0", enUs)
+                    : "None")
+            </dd>
+        </dl>
+    </section>
+
+    @* --------------------------------------------------------------------
+       4. Export CSV form (Design §11.6, Requirement 18.7)
+
+          Emits every field of `ForecastInputViewModel` as a hidden input
+          so the ExportCsv action can rebind the exact same view model and
+          re-run validate → solve → export deterministically. Field names
+          match the top-level shape (no `Inputs.` prefix) because the
+          controller binds `[HttpPost] ExportCsv(ForecastInputViewModel vm)`.
+       -------------------------------------------------------------------- *@
+    <section class="section results-export" aria-labelledby="results-export-heading">
+        <h2 id="results-export-heading" class="visually-hidden">Export</h2>
+
+        <form asp-action="ExportCsv" asp-controller="Forecast" method="post">
+            @Html.AntiForgeryToken()
+
+            @* -- Capital section (four scalar fields) -- *@
+            <input type="hidden" name="Capital.Equipment"
+                   value="@Model.Inputs.Capital.Equipment.ToString(inv)" />
+            <input type="hidden" name="Capital.TotalImprovementCost"
+                   value="@Model.Inputs.Capital.TotalImprovementCost.ToString(inv)" />
+            <input type="hidden" name="Capital.BuildingPurchaseCost"
+                   value="@Model.Inputs.Capital.BuildingPurchaseCost.ToString(inv)" />
+            <input type="hidden" name="Capital.OtherCapitalCost"
+                   value="@Model.Inputs.Capital.OtherCapitalCost.ToString(inv)" />
+
+            @* -- Marketing section (four schedulable line items) -- *@
+            @{
+                var marketingSchedules = new (string Name, MonthlyScheduleViewModel Schedule)[]
+                {
+                    ("Marketing.Print",           Model.Inputs.Marketing.Print),
+                    ("Marketing.Search",          Model.Inputs.Marketing.Search),
+                    ("Marketing.Social",          Model.Inputs.Marketing.Social),
+                    ("Marketing.OtherMarketing",  Model.Inputs.Marketing.OtherMarketing),
+                };
+            }
+            @foreach (var (name, schedule) in marketingSchedules)
+            {
+                <input type="hidden" name="@(name + ".Mode")" value="@schedule.Mode" />
+                <input type="hidden" name="@(name + ".ConstantValue")"
+                       value="@schedule.ConstantValue.ToString(inv)" />
+                for (var i = 0; i < ForecastConstants.ForecastMonths; i++)
+                {
+                    <input type="hidden"
+                           name="@($"{name}.MonthlyValues[{i}]")"
+                           value="@schedule.MonthlyValues[i].ToString(inv)" />
+                }
+            }
+
+            @* -- Operations section (14 schedulable line items) -- *@
+            @{
+                var operationsSchedules = new (string Name, MonthlyScheduleViewModel Schedule)[]
+                {
+                    ("Operations.Accounting",           Model.Inputs.Operations.Accounting),
+                    ("Operations.Custodial",            Model.Inputs.Operations.Custodial),
+                    ("Operations.Gas",                  Model.Inputs.Operations.Gas),
+                    ("Operations.Insurance",            Model.Inputs.Operations.Insurance),
+                    ("Operations.It",                   Model.Inputs.Operations.It),
+                    ("Operations.OfficeSupplies",       Model.Inputs.Operations.OfficeSupplies),
+                    ("Operations.ProfessionalServices", Model.Inputs.Operations.ProfessionalServices),
+                    ("Operations.RentExpense",          Model.Inputs.Operations.RentExpense),
+                    ("Operations.Repairs",              Model.Inputs.Operations.Repairs),
+                    ("Operations.Shipping",             Model.Inputs.Operations.Shipping),
+                    ("Operations.PropertyTax",          Model.Inputs.Operations.PropertyTax),
+                    ("Operations.Utilities",            Model.Inputs.Operations.Utilities),
+                    ("Operations.Wages",                Model.Inputs.Operations.Wages),
+                    ("Operations.OtherOperations",      Model.Inputs.Operations.OtherOperations),
+                };
+            }
+            @foreach (var (name, schedule) in operationsSchedules)
+            {
+                <input type="hidden" name="@(name + ".Mode")" value="@schedule.Mode" />
+                <input type="hidden" name="@(name + ".ConstantValue")"
+                       value="@schedule.ConstantValue.ToString(inv)" />
+                for (var i = 0; i < ForecastConstants.ForecastMonths; i++)
+                {
+                    <input type="hidden"
+                           name="@($"{name}.MonthlyValues[{i}]")"
+                           value="@schedule.MonthlyValues[i].ToString(inv)" />
+                }
+            }
+
+            @* -- Building section (five scalars + occupancy schedule) -- *@
+            <input type="hidden" name="Building.TotalSqft"
+                   value="@Model.Inputs.Building.TotalSqft.ToString(inv)" />
+            <input type="hidden" name="Building.PercentageAvailableForRent"
+                   value="@Model.Inputs.Building.PercentageAvailableForRent.ToString(inv)" />
+            <input type="hidden" name="Building.TotalBuildingCost"
+                   value="@Model.Inputs.Building.TotalBuildingCost.ToString(inv)" />
+            <input type="hidden" name="Building.LandValue"
+                   value="@Model.Inputs.Building.LandValue.ToString(inv)" />
+            <input type="hidden" name="Building.DepreciationPeriodYears"
+                   value="@Model.Inputs.Building.DepreciationPeriodYears.ToString(inv)" />
+
+            <input type="hidden" name="Building.Occupancy.UseDefault"
+                   value="@(Model.Inputs.Building.Occupancy.UseDefault ? "true" : "false")" />
+            @for (var i = 0; i < ForecastConstants.ForecastMonths; i++)
+            {
+                <input type="hidden"
+                       name="@($"Building.Occupancy.UserRates[{i}]")"
+                       value="@Model.Inputs.Building.Occupancy.UserRates[i].ToString(inv)" />
+            }
+
+            @* -- Loan section -- *@
+            <input type="hidden" name="Loan.AnnualLoanInterestRate"
+                   value="@Model.Inputs.Loan.AnnualLoanInterestRate.ToString(inv)" />
+            <input type="hidden" name="Loan.LoanTermMonths"
+                   value="@Model.Inputs.Loan.LoanTermMonths.ToString(inv)" />
+
+            @* -- Taxes section -- *@
+            <input type="hidden" name="Taxes.IncomeTaxRate"
+                   value="@Model.Inputs.Taxes.IncomeTaxRate.ToString(inv)" />
+
+            @* -- Owner activity section -- *@
+            <input type="hidden" name="OwnerActivity.OwnerInvestment"
+                   value="@Model.Inputs.OwnerActivity.OwnerInvestment.ToString(inv)" />
+            <input type="hidden" name="OwnerActivity.OwnerWithdrawals"
+                   value="@Model.Inputs.OwnerActivity.OwnerWithdrawals.ToString(inv)" />
+
+            @* -- Forecast controls -- *@
+            <input type="hidden" name="ForecastControls.BeginningCashMonth1"
+                   value="@Model.Inputs.ForecastControls.BeginningCashMonth1.ToString(inv)" />
+            <input type="hidden" name="ForecastControls.TargetCashPositiveMonth"
+                   value="@Model.Inputs.ForecastControls.TargetCashPositiveMonth.ToString(inv)" />
+
+            <div class="form-actions">
+                <button type="submit" class="btn">Export CSV</button>
+                <a class="btn btn-secondary" href="@Url.Action("Index", "Forecast")">
+                    Back to inputs
+                </a>
+            </div>
+        </form>
+    </section>
+
+    @* --------------------------------------------------------------------
+       5. 36-row detail table (Requirement 16.5, Design §13.3, §13.4)
+
+          Columns appear in the exact order required by R16.5. The wrapping
+          `.table-scroll` div provides horizontal scrolling on narrow
+          viewports (Requirement 16.7); the sticky-header and sticky-first-
+          column styles are added in task 63.
+       -------------------------------------------------------------------- *@
+    <section class="section" aria-labelledby="results-detail-heading">
+        <h2 id="results-detail-heading">Detailed 36-month forecast</h2>
+
+        <div class="table-scroll">
+            <table class="forecast-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Month</th>
+                        <th scope="col">Occupancy Rate</th>
+                        <th scope="col">Total Rental Units</th>
+                        <th scope="col">Rented Units</th>
+                        <th scope="col">Rented Sqft</th>
+                        <th scope="col">Monthly Price / Sqft</th>
+                        <th scope="col">Gross Revenue</th>
+                        <th scope="col">Gross Income</th>
+                        <th scope="col">Marketing Total</th>
+                        <th scope="col">Operations Total</th>
+                        <th scope="col">Wages</th>
+                        <th scope="col">Payroll Tax</th>
+                        <th scope="col">Loan Beginning Balance</th>
+                        <th scope="col">Monthly Loan Payment</th>
+                        <th scope="col">Monthly Loan Interest</th>
+                        <th scope="col">Monthly Loan Principal</th>
+                        <th scope="col">Loan Ending Balance</th>
+                        <th scope="col">Monthly Depreciation</th>
+                        <th scope="col">Pre-Tax Income</th>
+                        <th scope="col">Income Tax</th>
+                        <th scope="col">Total Expenses</th>
+                        <th scope="col">Net Income</th>
+                        <th scope="col">Beginning Cash</th>
+                        <th scope="col">Owner Investment (Month)</th>
+                        <th scope="col">Loan Proceeds (Month)</th>
+                        <th scope="col">Capital Expenditures (Month)</th>
+                        <th scope="col">Owner Withdrawals</th>
+                        <th scope="col">Ending Cash</th>
+                        <th scope="col">Cash-Positive Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in forecast.Rows)
+                    {
+                        <tr>
+                            <th scope="row">@row.Month.ToString("N0", enUs)</th>
+                            <td>@row.OccupancyRate.ToString("P1", enUs)</td>
+                            <td>@row.TotalRentalUnits.ToString("N0", enUs)</td>
+                            <td>@row.RentedUnits.ToString("N0", enUs)</td>
+                            <td>@row.RentedSqft.ToString("N2", enUs)</td>
+                            <td>@row.MonthlyPricePerSqft.ToString("C", enUs)</td>
+                            <td>@row.GrossRevenue.ToString("C", enUs)</td>
+                            <td>@row.GrossIncome.ToString("C", enUs)</td>
+                            <td>@row.MarketingTotal.ToString("C", enUs)</td>
+                            <td>@row.OperationsTotal.ToString("C", enUs)</td>
+                            <td>@row.Wages.ToString("C", enUs)</td>
+                            <td>@row.PayrollTax.ToString("C", enUs)</td>
+                            <td>@row.LoanBeginningBalance.ToString("C", enUs)</td>
+                            <td>@row.MonthlyLoanPayment.ToString("C", enUs)</td>
+                            <td>@row.MonthlyLoanInterest.ToString("C", enUs)</td>
+                            <td>@row.MonthlyLoanPrincipal.ToString("C", enUs)</td>
+                            <td>@row.LoanEndingBalance.ToString("C", enUs)</td>
+                            <td>@row.MonthlyDepreciation.ToString("C", enUs)</td>
+                            <td>@row.PreTaxIncome.ToString("C", enUs)</td>
+                            <td>@row.IncomeTax.ToString("C", enUs)</td>
+                            <td>@row.TotalExpenses.ToString("C", enUs)</td>
+                            <td>@row.NetIncome.ToString("C", enUs)</td>
+                            <td>@row.BeginningCash.ToString("C", enUs)</td>
+                            <td>@row.OwnerInvestmentInMonth.ToString("C", enUs)</td>
+                            <td>@row.LoanProceedsInMonth.ToString("C", enUs)</td>
+                            <td>@row.CapitalExpendituresInMonth.ToString("C", enUs)</td>
+                            <td>@row.OwnerWithdrawals.ToString("C", enUs)</td>
+                            <td>@row.EndingCash.ToString("C", enUs)</td>
+                            <td>@(row.CashPositiveStatus ? "Yes" : "No")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}

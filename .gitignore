@@ -1,0 +1,104 @@
+# =============================================================================
+# .gitignore for RehearsalForecast (.NET 10 / ASP.NET Core MVC / Terraform)
+# Task 1 — Requirements 21.1, 21.2, 21.4
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# .NET build output
+# -----------------------------------------------------------------------------
+bin/
+obj/
+publish/
+out/
+*.binlog
+
+# Test output
+TestResults/
+[Cc]overage/
+*.coverage
+*.coveragexml
+coverage.*.xml
+coverage.*.json
+coverage.*.info
+*.trx
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+# Keep NuGet.config so lock behaviour reproduces across machines.
+# packages.lock.json is intentionally NOT ignored (checked in for reproducible restores).
+
+# -----------------------------------------------------------------------------
+# Visual Studio / Rider / VS Code
+# -----------------------------------------------------------------------------
+.vs/
+.vscode/*.user
+*.user
+*.suo
+*.userprefs
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# JetBrains Rider
+.idea/
+*.DotSettings.user
+
+# -----------------------------------------------------------------------------
+# Terraform (state and plan artefacts only — keep .tf and .terraform.lock.hcl)
+# -----------------------------------------------------------------------------
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+# Developer-local variable values may hold real project IDs / SA emails
+# (design §16.8, Requirement 23.8). Keep the .example file tracked.
+terraform.tfvars
+*.auto.tfvars
+*.auto.tfvars.json
+
+# -----------------------------------------------------------------------------
+# Docker
+# -----------------------------------------------------------------------------
+docker-compose.override.yml
+
+# -----------------------------------------------------------------------------
+# OS noise
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# -----------------------------------------------------------------------------
+# Editor / temp
+# -----------------------------------------------------------------------------
+*.swp
+*.swo
+*.tmp
+*.bak
+*~
+
+# -----------------------------------------------------------------------------
+# Secrets — never commit
+# -----------------------------------------------------------------------------
+*.pfx
+*.p12
+appsettings.*.local.json
+secrets.json
+.env
+.env.*
+
+.fake

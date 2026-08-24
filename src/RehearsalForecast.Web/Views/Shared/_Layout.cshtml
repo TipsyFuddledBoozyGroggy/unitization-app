@@ -1,0 +1,38 @@
+@{
+    var pageTitle = ViewData["Title"] as string;
+    var fullTitle = string.IsNullOrWhiteSpace(pageTitle)
+        ? "Rehearsal Forecast"
+        : $"{pageTitle} — Rehearsal Forecast";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@fullTitle</title>
+    @* Bootstrap 5.3.3 — modern semantic styling for buttons, forms, tables,
+       alerts, cards, and grid utilities. Loaded first so app-specific rules
+       in site.css can layer over Bootstrap defaults. No Bootstrap JavaScript
+       bundle is loaded because the spec forbids client-side JS; the tabs on
+       the inputs page use a CSS-only radio-button technique. *@
+    <link rel="stylesheet" href="~/css/vendor/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="site-header navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="@Url.Action("Index", "Forecast")">Rehearsal Forecast</a>
+        </div>
+    </header>
+
+    <main class="site-main container py-4" role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer border-top py-3 mt-4">
+        <div class="container text-muted small">
+            Rehearsal Forecast · 36-month planning tool
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,86 @@
+{
+  "get_index": {
+    "status": 200,
+    "content_type": "text/html; charset=utf-8",
+    "size": 58141,
+    "has_h1": true
+  },
+  "post_calculate_valid": {
+    "status": 200,
+    "checks": {
+      "has_h1_results": true,
+      "has_flat_price_label": true,
+      "has_monthly_equivalent_label": true,
+      "has_cash_positive_rule_section": true,
+      "has_cash_positive_rule_row": true,
+      "has_first_sustained_row": true,
+      "has_summary_total_capital": true,
+      "has_summary_loan_proceeds": true,
+      "has_summary_rentable_sqft": true,
+      "has_export_button": true,
+      "has_table_scroll_wrapper": true,
+      "has_forecast_table": true,
+      "forecast_table_row_count": 36,
+      "forecast_table_col_count": 29,
+      "hero_values": [
+        "$113.42",
+        "$3.15"
+      ],
+      "cash_positive_rule_satisfied_value": "Yes",
+      "first_sustained_month_value": "24",
+      "target_cash_positive_month_value": "24"
+    }
+  },
+  "post_export_csv_valid": {
+    "status": 200,
+    "content_type": "text/csv",
+    "content_disposition": "attachment; filename=rehearsal-forecast-20260817-194030.csv; filename*=UTF-8''rehearsal-forecast-20260817-194030.csv",
+    "csv_size_bytes": 11863,
+    "total_records_in_csv": 37,
+    "header_columns": [
+      "Month",
+      "Occupancy_Rate",
+      "Total_Rental_Units",
+      "Rented_Units",
+      "Rented_Sqft",
+      "Monthly_Price_Per_Sqft",
+      "Gross_Revenue",
+      "Gross_Income",
+      "Marketing_Total",
+      "Operations_Total",
+      "Wages",
+      "Payroll_Tax",
+      "Loan_Beginning_Balance",
+      "Monthly_Loan_Payment",
+      "Monthly_Loan_Interest",
+      "Monthly_Loan_Principal",
+      "Loan_Ending_Balance",
+      "Monthly_Depreciation",
+      "Pre_Tax_Income",
+      "Income_Tax",
+      "Total_Expenses",
+      "Net_Income",
+      "Beginning_Cash",
+      "Owner_Investment_In_Month",
+      "Loan_Proceeds_In_Month",
+      "Capital_Expenditures_In_Month",
+      "Owner_Withdrawals",
+      "Ending_Cash",
+      "Cash_Positive_Status",
+      "Flat_Price_Per_Sqft"
+    ],
+    "header_column_count": 30,
+    "data_row_count": 36,
+    "flat_price_last_col": "Flat_Price_Per_Sqft",
+    "parseable_numeric_cells": 1044,
+    "unparseable_cells": []
+  },
+  "post_calculate_invalid": {
+    "status": 200,
+    "rerenders_index_page": true,
+    "renders_results_page": false,
+    "has_validation_summary_role_alert": false,
+    "surfaces_pct_range_message": true,
+    "surfaces_inline_error_span": true
+  }
+}

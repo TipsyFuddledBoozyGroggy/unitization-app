@@ -1,0 +1,43 @@
+# DigitalOcean App Platform spec for Rehearsal Forecast.
+#
+# Deploy: `doctl apps create --spec .do/app.yaml` (first time)
+# Update: `doctl apps update <APP_ID> --spec .do/app.yaml`
+#
+# GitHub auto-deploy is enabled: pushes to `main` trigger a new build.
+# Before the first `doctl apps create` succeeds, the DO account must be
+# linked to GitHub via the DO web console (one-time authorization).
+
+name: rehearsal-forecast
+region: sfo3
+
+services:
+  - name: web
+    # Build from the repository's Dockerfile. The repo root is the build
+    # context, matching how the Dockerfile references `src/...` paths.
+    dockerfile_path: Dockerfile
+
+    github:
+      repo: TipsyFuddledBoozyGroggy/unitization-app
+      branch: main
+      deploy_on_push: true
+
+    # Cheapest shared-CPU tier: 512 MiB / 1 vCPU / 50 GiB bandwidth / $5 mo.
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+
+    # App Platform injects PORT=8080 by default; the Dockerfile's
+    # ASPNETCORE_URLS=http://+:${PORT:-8080} picks it up automatically.
+    http_port: 8080
+
+    envs:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+        scope: RUN_TIME
+
+    health_check:
+      http_path: /
+      initial_delay_seconds: 15
+      period_seconds: 10
+      timeout_seconds: 3
+      success_threshold: 1
+      failure_threshold: 3

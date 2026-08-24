@@ -1,0 +1,26 @@
+# Example variable values for the dev environment.
+#
+# Copy this file to `terraform.tfvars` (which is gitignored) and fill
+# in real values for your local validation. The placeholders below are
+# intentionally non-functional so this repository never contains real
+# project IDs, service account emails, or image references
+# (Requirement 23.8; design §16.8).
+
+project_id            = "YOUR_PROJECT_ID"
+region                = "us-central1"
+service_name          = "rehearsal-forecast-dev"
+container_image       = "us-docker.pkg.dev/YOUR_PROJECT_ID/rehearsal-forecast/rehearsal-forecast:latest"
+service_account_email = "rehearsal-forecast-run@YOUR_PROJECT_ID.iam.gserviceaccount.com"
+
+# Optional: leave commented to keep the service private.
+# allow_public_access = false
+
+# Optional: extra labels merged with environment/service labels.
+# labels = {
+#   owner = "platform"
+# }
+
+# Optional: non-secret environment variables.
+# env_vars = {
+#   ASPNETCORE_ENVIRONMENT = "Development"
+# }

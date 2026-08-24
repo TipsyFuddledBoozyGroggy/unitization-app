@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inputs &#x2014; Rehearsal Forecast</title>
+    <link rel="stylesheet" href="/css/site.css?v=AEYgpaXI4ReK2CgyKO9ErqeAm88TDsgUFl89iNycKjU" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a class="site-header__brand" href="/">Rehearsal Forecast</a>
+        </div>
+    </header>
+
+    <main class="site-main" role="main">
+        
+
+<h1>Rehearsal Forecast — Inputs</h1>
+
+<div class="validation-summary validation-summary-valid" role="alert" data-valmsg-summary="true"><ul><li style="display:none"></li>
+</ul></div>
+
+
+<form method="post" novalidate action="/Forecast/Calculate">
+    
+
+    <section class="section" aria-labelledby="section-capital">
+        <h2 id="section-capital">1. Capital</h2>
+        <p class="form-hint">
+            One-time capital outlays booked as Month 1 expenditures. The sum of
+            these four fields is <em>Total_Capital</em>; that summary value and
+            the derived <em>Loan_Proceeds</em> are shown on the results page.
+        </p>
+
+        <div class="form-field">
+            <label class="form-label" for="Capital_Equipment">Equipment</label>
+            <input type="number" step="0.01" min="0" inputmode="decimal" data-val="true" data-val-number="The field Equipment must be a number." data-val-range="Equipment must be zero or greater." data-val-range-max="1.7976931348623157E&#x2B;308" data-val-range-min="0" data-val-required="The Equipment field is required." id="Capital_Equipment" name="Capital.Equipment" value="0" /><input name="__Invariant" type="hidden" value="Capital.Equipment" />
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Capital.Equipment" data-valmsg-replace="true"></span>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="Capital_TotalImprovementCost">Total Improvement Cost</label>
+            <input type="number" step="0.01" min="0" inputmode="decimal" data-val="true" data-val-number="The field Total Improvement Cost must be a number." data-val-range="Total Improvement Cost must be zero or greater." data-val-range-max="1.7976931348623157E&#x2B;308" data-val-range-min="0" data-val-required="The Total Improvement Cost field is required." id="Capital_TotalImprovementCost" name="Capital.TotalImprovementCost" value="0" /><input name="__Invariant" type="hidden" value="Capital.TotalImprovementCost" />
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Capital.TotalImprovementCost" data-valmsg-replace="true"></span>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="Capital_BuildingPurchaseCost">Building Purchase Cost</label>
+            <input type="number" step="0.01" min="0" inputmode="decimal" data-val="true" data-val-number="The field Building Purchase Cost must be a number." data-val-range="Building Purchase Cost must be zero or greater." data-val-range-max="1.7976931348623157E&#x2B;308" data-val-range-min="0" data-val-required="The Building Purchase Cost field is required." id="Capital_BuildingPurchaseCost" name="Capital.BuildingPurchaseCost" value="0" /><input name="__Invariant" type="hidden" value="Capital.BuildingPurchaseCost" />
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Capital.BuildingPurchaseCost" data-valmsg-replace="true"></span>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="Capital_OtherCapitalCost">Other Capital Cost</label>
+            <input type="number" step="0.01" min="0" inputmode="decimal" data-val="true" data-val-number="The field Other Capital Cost must be a number." data-val-range="Other Capital Cost must be zero or greater." data-val-range-max="1.7976931348623157E&#x2B;308" data-val-range-min="0" data-val-required="The Other Capital Cost field is required." id="Capital_OtherCapitalCost" name="Capital.OtherCapitalCost" value="0" /><input name="__Invariant" type="hidden" value="Capital.OtherCapitalCost" />
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Capital.OtherCapitalCost" data-valmsg-replace="true"></span>
+        </div>
+    </section>
+
+    <section class="section" aria-labelledby="section-marketing">
+        <h2 id="section-marketing">2. Marketing</h2>
+        <p class="form-hint">
+            Four marketing line items. Each may be entered as a single constant
+            applied to every month, or as an explicit 36-month schedule.
+        </p>
+
+        <div class="form-field">
+            <span class="form-label">Print</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Marketing_Print_Mode_Constant">
+            <input type="radio" value="Constant" id="Marketing_Print_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Marketing.Print.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Marketing_Print_Mode_Variable">
+            <input type="radio" value="Variable" id="Marketing_Print_Mode_Variable" name="Marketing.Print.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Marketing.Print.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Marketing_Print_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Marketing_Print_ConstantValue" name="Marketing.Print.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Marketing.Print.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Marketing.Print.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Search</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Marketing_Search_Mode_Constant">
+            <input type="radio" value="Constant" id="Marketing_Search_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Marketing.Search.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Marketing_Search_Mode_Variable">
+            <input type="radio" value="Variable" id="Marketing_Search_Mode_Variable" name="Marketing.Search.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Marketing.Search.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Marketing_Search_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Marketing_Search_ConstantValue" name="Marketing.Search.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Marketing.Search.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Marketing.Search.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Social</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Marketing_Social_Mode_Constant">
+            <input type="radio" value="Constant" id="Marketing_Social_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Marketing.Social.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Marketing_Social_Mode_Variable">
+            <input type="radio" value="Variable" id="Marketing_Social_Mode_Variable" name="Marketing.Social.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Marketing.Social.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Marketing_Social_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Marketing_Social_ConstantValue" name="Marketing.Social.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Marketing.Social.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Marketing.Social.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Other Marketing</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Marketing_OtherMarketing_Mode_Constant">
+            <input type="radio" value="Constant" id="Marketing_OtherMarketing_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Marketing.OtherMarketing.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Marketing_OtherMarketing_Mode_Variable">
+            <input type="radio" value="Variable" id="Marketing_OtherMarketing_Mode_Variable" name="Marketing.OtherMarketing.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Marketing.OtherMarketing.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Marketing_OtherMarketing_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Marketing_OtherMarketing_ConstantValue" name="Marketing.OtherMarketing.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Marketing.OtherMarketing.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Marketing.OtherMarketing.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+    </section>
+
+    <section class="section" aria-labelledby="section-operations">
+        <h2 id="section-operations">3. Operations</h2>
+        <p class="form-hint">
+            Fourteen operational line items. Each may be entered as a constant
+            or a 36-month schedule. <em>Payroll_Tax</em> is derived from
+            <em>Wages</em> (Wages × 0.0765) and is shown on the results page —
+            it is not a user input.
+        </p>
+
+        <div class="form-field">
+            <span class="form-label">Accounting</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_Accounting_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_Accounting_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.Accounting.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_Accounting_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_Accounting_Mode_Variable" name="Operations.Accounting.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Accounting.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_Accounting_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_Accounting_ConstantValue" name="Operations.Accounting.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.Accounting.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Accounting.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Custodial</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_Custodial_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_Custodial_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.Custodial.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_Custodial_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_Custodial_Mode_Variable" name="Operations.Custodial.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Custodial.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_Custodial_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_Custodial_ConstantValue" name="Operations.Custodial.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.Custodial.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Custodial.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Gas</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_Gas_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_Gas_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.Gas.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_Gas_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_Gas_Mode_Variable" name="Operations.Gas.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Gas.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_Gas_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_Gas_ConstantValue" name="Operations.Gas.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.Gas.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Gas.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Insurance</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_Insurance_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_Insurance_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.Insurance.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_Insurance_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_Insurance_Mode_Variable" name="Operations.Insurance.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Insurance.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_Insurance_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_Insurance_ConstantValue" name="Operations.Insurance.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.Insurance.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Insurance.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">IT</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_It_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_It_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.It.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_It_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_It_Mode_Variable" name="Operations.It.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.It.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_It_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_It_ConstantValue" name="Operations.It.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.It.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.It.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Office Supplies</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_OfficeSupplies_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_OfficeSupplies_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.OfficeSupplies.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_OfficeSupplies_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_OfficeSupplies_Mode_Variable" name="Operations.OfficeSupplies.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.OfficeSupplies.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_OfficeSupplies_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_OfficeSupplies_ConstantValue" name="Operations.OfficeSupplies.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.OfficeSupplies.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.OfficeSupplies.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Professional Services</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_ProfessionalServices_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_ProfessionalServices_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.ProfessionalServices.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_ProfessionalServices_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_ProfessionalServices_Mode_Variable" name="Operations.ProfessionalServices.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.ProfessionalServices.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_ProfessionalServices_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_ProfessionalServices_ConstantValue" name="Operations.ProfessionalServices.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.ProfessionalServices.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.ProfessionalServices.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Rent Expense</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_RentExpense_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_RentExpense_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.RentExpense.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_RentExpense_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_RentExpense_Mode_Variable" name="Operations.RentExpense.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.RentExpense.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_RentExpense_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_RentExpense_ConstantValue" name="Operations.RentExpense.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.RentExpense.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.RentExpense.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Repairs</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_Repairs_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_Repairs_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.Repairs.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_Repairs_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_Repairs_Mode_Variable" name="Operations.Repairs.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Repairs.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_Repairs_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_Repairs_ConstantValue" name="Operations.Repairs.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.Repairs.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Repairs.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Shipping</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_Shipping_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_Shipping_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.Shipping.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_Shipping_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_Shipping_Mode_Variable" name="Operations.Shipping.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Shipping.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_Shipping_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_Shipping_ConstantValue" name="Operations.Shipping.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.Shipping.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Shipping.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Property Tax</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_PropertyTax_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_PropertyTax_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.PropertyTax.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_PropertyTax_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_PropertyTax_Mode_Variable" name="Operations.PropertyTax.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.PropertyTax.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_PropertyTax_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_PropertyTax_ConstantValue" name="Operations.PropertyTax.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.PropertyTax.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.PropertyTax.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Utilities</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_Utilities_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_Utilities_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.Utilities.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_Utilities_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_Utilities_Mode_Variable" name="Operations.Utilities.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Utilities.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_Utilities_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_Utilities_ConstantValue" name="Operations.Utilities.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.Utilities.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Utilities.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Wages</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_Wages_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_Wages_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.Wages.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_Wages_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_Wages_Mode_Variable" name="Operations.Wages.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Wages.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_Wages_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_Wages_ConstantValue" name="Operations.Wages.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.Wages.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.Wages.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Other Operations</span>
+            
+
+<div class="monthly-schedule-editor" data-schedule-mode="Constant">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="schedule-mode-label active-label" for="Operations_OtherOperations_Mode_Constant">
+            <input type="radio" value="Constant" id="Operations_OtherOperations_Mode_Constant" checked="checked" data-val="true" data-val-required="The Mode field is required." name="Operations.OtherOperations.Mode" />
+            <span>Constant</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Operations_OtherOperations_Mode_Variable">
+            <input type="radio" value="Variable" id="Operations_OtherOperations_Mode_Variable" name="Operations.OtherOperations.Mode" />
+            <span>Variable</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.OtherOperations.Mode" data-valmsg-replace="true"></span>
+    </div>
+
+        <div class="schedule-subform schedule-subform--constant schedule-subform--active">
+            <div class="form-field">
+                <label class="form-label" for="Operations_OtherOperations_ConstantValue">Value</label>
+                <input type="number" step="0.01" inputmode="decimal" data-val="true" data-val-number="The field ConstantValue must be a number." data-val-required="The ConstantValue field is required." id="Operations_OtherOperations_ConstantValue" name="Operations.OtherOperations.ConstantValue" value="0" /><input name="__Invariant" type="hidden" value="Operations.OtherOperations.ConstantValue" />
+                <span class="field-validation-error field-validation-valid" data-valmsg-for="Operations.OtherOperations.ConstantValue" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+</div>
+
+        </div>
+    </section>
+
+    <section class="section" aria-labelledby="section-building">
+        <h2 id="section-building">4. Building</h2>
+        <p class="form-hint">
+            Building geometry, the depreciable cost, and the occupancy
+            schedule. Derived values <em>Rentable_Sqft</em>,
+            <em>Total_Rental_Units</em>, <em>Rented_Units</em>,
+            <em>Rented_Sqft</em>, and <em>Monthly_Depreciation</em> appear on
+            the results page after Calculate.
+        </p>
+
+        <div class="form-field">
+            <label class="form-label" for="Building_TotalSqft">Total Sqft</label>
+            <input type="number" step="0.01" min="0" inputmode="decimal" data-val="true" data-val-number="The field Total Sqft must be a number." data-val-range="Total Sqft must be zero or greater." data-val-range-max="1.7976931348623157E&#x2B;308" data-val-range-min="0" data-val-required="The Total Sqft field is required." id="Building_TotalSqft" name="Building.TotalSqft" value="0" /><input name="__Invariant" type="hidden" value="Building.TotalSqft" />
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Building.TotalSqft" data-valmsg-replace="true"></span>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="Building_PercentageAvailableForRent">Percentage Available For Rent</label>
+            <input type="number" step="0.01" min="0" max="1" inputmode="decimal" data-val="true" data-val-number="The field Percentage Available For Rent must be a number." data-val-range="Percentage Available For Rent must be between 0 and 1." data-val-range-max="1" data-val-range-min="0" data-val-required="The Percentage Available For Rent field is required." id="Building_PercentageAvailableForRent" name="Building.PercentageAvailableForRent" value="0" /><input name="__Invariant" type="hidden" value="Building.PercentageAvailableForRent" />
+            <span class="form-hint">Decimal in the inclusive range [0, 1] (e.g. 0.75 = 75%).</span>
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Building.PercentageAvailableForRent" data-valmsg-replace="true"></span>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="Building_TotalBuildingCost">Total Building Cost</label>
+            <input type="number" step="0.01" min="0" inputmode="decimal" data-val="true" data-val-number="The field Total Building Cost must be a number." data-val-range="Total Building Cost must be zero or greater." data-val-range-max="1.7976931348623157E&#x2B;308" data-val-range-min="0" data-val-required="The Total Building Cost field is required." id="Building_TotalBuildingCost" name="Building.TotalBuildingCost" value="0" /><input name="__Invariant" type="hidden" value="Building.TotalBuildingCost" />
+            <span class="form-hint">
+                Depreciable building cost. Drives Monthly_Depreciation =
+                Total_Building_Cost ÷ (Depreciation_Period_Years × 12).
+            </span>
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Building.TotalBuildingCost" data-valmsg-replace="true"></span>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" title="Display-only. Not used in any calculation in this phase (Requirement 8.5)." for="Building_LandValue">Land Value</label>
+            <input type="number" step="0.01" min="0" inputmode="decimal" aria-describedby="land-value-hint" title="Display-only. Not used in any calculation in this phase (Requirement 8.5)." data-val="true" data-val-number="The field Land Value must be a number." data-val-range="Land Value must be zero or greater." data-val-range-max="1.7976931348623157E&#x2B;308" data-val-range-min="0" data-val-required="The Land Value field is required." id="Building_LandValue" name="Building.LandValue" value="0" /><input name="__Invariant" type="hidden" value="Building.LandValue" />
+            <span id="land-value-hint" class="form-hint">
+                Display-only. Captured for reporting; not used in any calculation in this phase.
+            </span>
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Building.LandValue" data-valmsg-replace="true"></span>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="Building_DepreciationPeriodYears">Depreciation Period (Years)</label>
+            <input type="number" step="1" min="1" inputmode="numeric" data-val="true" data-val-range="Depreciation Period must be at least 1 year." data-val-range-max="2147483647" data-val-range-min="1" data-val-required="The Depreciation Period (Years) field is required." id="Building_DepreciationPeriodYears" name="Building.DepreciationPeriodYears" value="1" /><input name="__Invariant" type="hidden" value="Building.DepreciationPeriodYears" />
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Building.DepreciationPeriodYears" data-valmsg-replace="true"></span>
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Occupancy Rate</span>
+            <span class="form-hint">
+                Default schedule uses the built-in ramp Min(month × 0.10, 1.00);
+                switch to Variable to enter 36 custom monthly rates.
+            </span>
+            
+
+<div class="occupancy-editor" data-occupancy-mode="default">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Occupancy schedule mode">
+        <label class="schedule-mode-label active-label" for="Building_Occupancy_UseDefault_True">
+            <input type="radio"
+                   name="Building.Occupancy.UseDefault"
+                   id="Building_Occupancy_UseDefault_True"
+                   value="true"
+                   checked="checked" />
+            <span>Default schedule</span>
+        </label>
+
+        <label class="schedule-mode-label" for="Building_Occupancy_UseDefault_False">
+            <input type="radio"
+                   name="Building.Occupancy.UseDefault"
+                   id="Building_Occupancy_UseDefault_False"
+                   value="false" />
+            <span>Variable (36 rates)</span>
+        </label>
+
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Building.Occupancy.UseDefault" data-valmsg-replace="true"></span>
+        <span class="field-validation-error field-validation-valid" data-valmsg-for="Building.Occupancy.UserRates" data-valmsg-replace="true"></span>
+    </div>
+
+        <p class="form-hint">
+            Using the default 10%-per-month occupancy ramp: 10%, 20%, …, 100% for
+            months 1 through 10 and 100% thereafter. Switch to Variable to enter
+            36 custom monthly rates.
+        </p>
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[0]"
+                   value="0.10" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[1]"
+                   value="0.20" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[2]"
+                   value="0.30" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[3]"
+                   value="0.40" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[4]"
+                   value="0.50" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[5]"
+                   value="0.60" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[6]"
+                   value="0.70" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[7]"
+                   value="0.80" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[8]"
+                   value="0.90" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[9]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[10]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[11]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[12]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[13]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[14]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[15]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[16]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[17]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[18]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[19]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[20]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[21]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[22]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[23]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[24]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[25]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[26]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[27]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[28]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[29]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[30]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[31]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[32]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[33]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[34]"
+                   value="1.00" />
+            <input type="hidden"
+                   name="Building.Occupancy.UserRates[35]"
+                   value="1.00" />
+</div>
+
+        </div>
+    </section>
+
+    <section class="section" aria-labelledby="section-loan">
+        <h2 id="section-loan">5. Loan</h2>
+        <p class="form-hint">
+            Interest rate and term. <em>Loan_Proceeds</em>,
+            <em>Monthly_Loan_Interest</em>, and
+            <em>Monthly_Loan_Principal</em> are derived and appear on the
+            results page after Calculate; they are not user inputs.
+        </p>
+
+        <div class="form-field">
+            <label class="form-label" for="Loan_AnnualLoanInterestRate">Annual Loan Interest Rate</label>
+            <input type="number" step="0.0001" min="0" inputmode="decimal" data-val="true" data-val-number="The field Annual Loan Interest Rate must be a number." data-val-range="Annual Loan Interest Rate must be zero or greater." data-val-range-max="1.7976931348623157E&#x2B;308" data-val-range-min="0" data-val-required="The Annual Loan Interest Rate field is required." id="Loan_AnnualLoanInterestRate" name="Loan.AnnualLoanInterestRate" value="0" /><input name="__Invariant" type="hidden" value="Loan.AnnualLoanInterestRate" />
+            <span class="form-hint">Decimal (e.g. 0.065 = 6.5% per year).</span>
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Loan.AnnualLoanInterestRate" data-valmsg-replace="true"></span>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="Loan_LoanTermMonths">Loan Term (Months)</label>
+            <input type="number" step="1" min="1" inputmode="numeric" data-val="true" data-val-range="Loan Term must be at least 1 month." data-val-range-max="2147483647" data-val-range-min="1" data-val-required="The Loan Term (Months) field is required." id="Loan_LoanTermMonths" name="Loan.LoanTermMonths" value="1" /><input name="__Invariant" type="hidden" value="Loan.LoanTermMonths" />
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Loan.LoanTermMonths" data-valmsg-replace="true"></span>
+        </div>
+    </section>
+
+    <section class="section" aria-labelledby="section-taxes">
+        <h2 id="section-taxes">6. Taxes</h2>
+        <p class="form-hint">
+            Only <em>Income_Tax_Rate</em> is a user input.
+            <em>Payroll_Tax</em> is derived at the fixed rate 0.0765 applied to
+            Wages (Requirement 7.2) and appears on the results page.
+        </p>
+
+        <div class="form-field">
+            <label class="form-label" for="Taxes_IncomeTaxRate">Income Tax Rate</label>
+            <input type="number" step="0.01" min="0" max="1" inputmode="decimal" data-val="true" data-val-number="The field Income Tax Rate must be a number." data-val-range="Income Tax Rate must be between 0 and 1." data-val-range-max="1" data-val-range-min="0" data-val-required="The Income Tax Rate field is required." id="Taxes_IncomeTaxRate" name="Taxes.IncomeTaxRate" value="0" /><input name="__Invariant" type="hidden" value="Taxes.IncomeTaxRate" />
+            <span class="form-hint">Decimal in the inclusive range [0, 1] (e.g. 0.25 = 25%).</span>
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="Taxes.IncomeTaxRate" data-valmsg-replace="true"></span>
+        </div>
+    </section>
+
+    <section class="section" aria-labelledby="section-owner-activity">
+        <h2 id="section-owner-activity">7. Owner Activity</h2>
+        <p class="form-hint">
+            Owner_Investment is a Month 1 cash contribution. Owner_Withdrawals
+            is a single constant per-month value applied uniformly to every
+            month (Requirement 1.6, Design Decision 8) — this section
+            intentionally does not expose a Constant/Variable toggle.
+        </p>
+
+        <div class="form-field">
+            <label class="form-label" for="OwnerActivity_OwnerInvestment">Owner Investment</label>
+            <input type="number" step="0.01" min="0" inputmode="decimal" data-val="true" data-val-number="The field Owner Investment must be a number." data-val-range="Owner Investment must be zero or greater." data-val-range-max="1.7976931348623157E&#x2B;308" data-val-range-min="0" data-val-required="The Owner Investment field is required." id="OwnerActivity_OwnerInvestment" name="OwnerActivity.OwnerInvestment" value="0" /><input name="__Invariant" type="hidden" value="OwnerActivity.OwnerInvestment" />
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="OwnerActivity.OwnerInvestment" data-valmsg-replace="true"></span>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="OwnerActivity_OwnerWithdrawals">Owner Withdrawals</label>
+            <input type="number" step="0.01" min="0" inputmode="decimal" data-val="true" data-val-number="The field Owner Withdrawals must be a number." data-val-range="Owner Withdrawals must be zero or greater." data-val-range-max="1.7976931348623157E&#x2B;308" data-val-range-min="0" data-val-required="The Owner Withdrawals field is required." id="OwnerActivity_OwnerWithdrawals" name="OwnerActivity.OwnerWithdrawals" value="0" /><input name="__Invariant" type="hidden" value="OwnerActivity.OwnerWithdrawals" />
+            <span class="form-hint">
+                Constant amount subtracted from cash every month, Month 1 through Month 36.
+            </span>
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="OwnerActivity.OwnerWithdrawals" data-valmsg-replace="true"></span>
+        </div>
+    </section>
+
+    <section class="section" aria-labelledby="section-forecast-controls">
+        <h2 id="section-forecast-controls">8. Forecast Controls</h2>
+        <p class="form-hint">
+            Opening cash balance and the month by which the business must
+            reach a sustained cash-positive state through Month 36.
+        </p>
+
+        <div class="form-field">
+            <label class="form-label" for="ForecastControls_BeginningCashMonth1">Beginning Cash (Month 1)</label>
+            <input type="number" step="0.01" min="0" inputmode="decimal" data-val="true" data-val-number="The field Beginning Cash (Month 1) must be a number." data-val-range="Beginning Cash (Month 1) must be zero or greater." data-val-range-max="1.7976931348623157E&#x2B;308" data-val-range-min="0" data-val-required="The Beginning Cash (Month 1) field is required." id="ForecastControls_BeginningCashMonth1" name="ForecastControls.BeginningCashMonth1" value="0" /><input name="__Invariant" type="hidden" value="ForecastControls.BeginningCashMonth1" />
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="ForecastControls.BeginningCashMonth1" data-valmsg-replace="true"></span>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="ForecastControls_TargetCashPositiveMonth">Target Cash-Positive Month</label>
+            <input type="number" step="1" min="1" max="36" inputmode="numeric" data-val="true" data-val-range="Target Cash-Positive Month must be an integer between 1 and 36." data-val-range-max="36" data-val-range-min="1" data-val-required="The Target Cash-Positive Month field is required." id="ForecastControls_TargetCashPositiveMonth" name="ForecastControls.TargetCashPositiveMonth" value="36" /><input name="__Invariant" type="hidden" value="ForecastControls.TargetCashPositiveMonth" />
+            <span class="form-hint">Integer in the inclusive range [1, 36].</span>
+            <span class="field-validation-error field-validation-valid" data-valmsg-for="ForecastControls.TargetCashPositiveMonth" data-valmsg-replace="true"></span>
+        </div>
+    </section>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">Calculate</button>
+    </div>
+<input name="__RequestVerificationToken" type="hidden" value="CfDJ8KBn9EycoxVLqlcSto4mdgg3veZjzVjB0Y8K1Iw9KfGfkOLfYzO4Q8AxmK3JCKQz3-b56tYY3fCOGhlpCouaPUOjdElVaj0UMGO1aZKf_F-ZBWeOvg5WvErpEVd5ZceKeIJDfmPvz1GuSQ2ltsrdWr8" /></form>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-footer__inner">
+            <span>Rehearsal Forecast · 36-month planning tool</span>
+        </div>
+    </footer>
+</body>
+</html>

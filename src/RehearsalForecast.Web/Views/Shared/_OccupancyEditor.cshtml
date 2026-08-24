@@ -1,0 +1,189 @@
+@*
+    _OccupancyEditor.cshtml — reusable editor for the Occupancy_Rate section
+    (design §9.1, §13.1, Requirements 1.3, 1.5, 4.1, 4.2, 4.7, 2.10).
+
+    Renders:
+      * A [Default schedule | Variable (36 rates)] radio toggle (R1.5, R4.1,
+        R4.2). The active mode is visually distinguishable via the
+        `active-label` class on the selected label, matching the visual pattern
+        used by `_MonthlyScheduleEditor.cshtml` (design §13.2).
+      * When Default is active: the built-in ramp `Min(m * 0.10, 1.00)` will be
+        used by the calculator (R4.1). No user rates are shown, but 36 hidden
+        inputs are emitted, pre-seeded with the default ramp values so that a
+        deliberate Default→Variable toggle round-trip (R1.3, R4.7) causes the
+        browser to submit `UserRates[m] = Min(m * 0.10, 1.00)` for every m in
+        [1, 36]. The ModelBinder populates `UserRates` accordingly, and the
+        subsequent re-render surfaces the ramp in the visible 12×3 grid — no
+        controller special-casing required.
+      * When Variable is active: a 12×3 grid of 36 numeric inputs (Months
+        1..12, 13..24, 25..36), each `asp-for`-bound to
+        `UserRates[monthIndex]` with `aria-label="Month {m}"` (R4.2). Each cell
+        carries its own per-month error slot so R2.10 range-violation messages
+        surface next to the offending input (design §14.1).
+
+    Validation is server-side (R2.11). Client-side JavaScript is not required.
+
+    Invocation pattern (from Views/Forecast/Index.cshtml, task 61):
+
+        <partial name="_OccupancyEditor" for="Building.Occupancy" />
+
+    The parent `for` expression sets
+    `ViewData.TemplateInfo.HtmlFieldPrefix` to `"Building.Occupancy"`, which
+    the tag helpers combine with the `asp-for` values below to produce fully
+    qualified field names such as `Building.Occupancy.UseDefault` and
+    `Building.Occupancy.UserRates[0..35]`. Those names match what
+    `OccupancyScheduleModelBinder` reads on POST and what `InputValidator`
+    reports errors against (design §9.4, §10.3, §11.4).
+*@
+@model OccupancyScheduleViewModel
+@using System.Globalization
+@using RehearsalForecast.Core.Constants
+
+@{
+    // Turn the dotted/indexed HTML field prefix (e.g. "Building.Occupancy")
+    // into a safe id fragment so radios and inputs get unique DOM ids across
+    // the input page.
+    var prefix = ViewData.TemplateInfo.HtmlFieldPrefix ?? string.Empty;
+    var idPrefix = string.IsNullOrEmpty(prefix)
+        ? "Occupancy"
+        : prefix
+            .Replace('.', '_')
+            .Replace('[', '_')
+            .Replace(']', '_');
+
+    var defaultRadioId = $"{idPrefix}_UseDefault_True";
+    var variableRadioId = $"{idPrefix}_UseDefault_False";
+
+    var months = ForecastConstants.ForecastMonths;
+    var isDefault = Model.UseDefault;
+    var isVariable = !Model.UseDefault;
+
+    var defaultLabelClass = isDefault
+        ? "schedule-mode-label active-label"
+        : "schedule-mode-label";
+    var variableLabelClass = isVariable
+        ? "schedule-mode-label active-label"
+        : "schedule-mode-label";
+
+    var variableSubformClass = isVariable
+        ? "schedule-subform schedule-subform--variable schedule-subform--active"
+        : "schedule-subform schedule-subform--variable";
+
+    // R4.1: the default schedule value for month m (1-based) is
+    // Min(m * 0.10, 1.00). Format with a fixed two-decimal invariant string
+    // so hidden-input round-trips are culture-stable.
+    string DefaultRampAt(int monthIndex)
+    {
+        var value = (monthIndex + 1) * 0.10m;
+        if (value > 1.00m)
+        {
+            value = 1.00m;
+        }
+        return value.ToString("0.00", CultureInfo.InvariantCulture);
+    }
+
+    // The field name for a single UserRates slot. Combines the current
+    // HtmlFieldPrefix ("Building.Occupancy") with "UserRates[i]" so the
+    // hidden inputs emitted in Default mode round-trip through the same
+    // ModelBinder keys the visible inputs use in Variable mode.
+    var userRatesName = Html.NameFor(m => m.UserRates);
+}
+
+<div class="occupancy-editor" data-occupancy-mode="@(isDefault ? "default" : "variable")">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Occupancy schedule mode">
+        <label class="@defaultLabelClass" for="@defaultRadioId">
+            <input type="radio"
+                   name="@Html.NameFor(m => m.UseDefault)"
+                   id="@defaultRadioId"
+                   value="true"
+                   checked="@(isDefault ? "checked" : null)" />
+            <span>Default schedule</span>
+        </label>
+
+        <label class="@variableLabelClass" for="@variableRadioId">
+            <input type="radio"
+                   name="@Html.NameFor(m => m.UseDefault)"
+                   id="@variableRadioId"
+                   value="false"
+                   checked="@(isVariable ? "checked" : null)" />
+            <span>Variable (36 rates)</span>
+        </label>
+
+        @* R2.11 / design §14.1: schedule-level errors (e.g. UserRates length
+           mismatch reported by InputValidator at FieldPath
+           "Building.Occupancy.UserRates") render adjacent to the mode
+           selector. *@
+        <span asp-validation-for="UseDefault" class="field-validation-error"></span>
+        <span asp-validation-for="UserRates" class="field-validation-error"></span>
+    </div>
+
+    @if (isDefault)
+    {
+        <p class="form-hint">
+            Using the default 10%-per-month occupancy ramp: 10%, 20%, …, 100% for
+            months 1 through 10 and 100% thereafter. Switch to Variable to enter
+            36 custom monthly rates.
+        </p>
+
+        @* R4.7: pre-populate the 36 rate slots with the default ramp so a
+           deliberate Default→Variable toggle round-trip carries the ramp
+           values to the server. The visible 12×3 grid appears only in
+           Variable mode; these hidden inputs share the same field names
+           (`<prefix>.UserRates[i]`) and therefore round-trip through
+           `OccupancyScheduleModelBinder` identically. *@
+        @for (var monthIndex = 0; monthIndex < months; monthIndex++)
+        {
+            var slotName = $"{userRatesName}[{monthIndex}]";
+            <input type="hidden"
+                   name="@slotName"
+                   value="@DefaultRampAt(monthIndex)" />
+        }
+    }
+    else
+    {
+        <div class="@variableSubformClass">
+            <p class="form-hint">
+                Enter 36 monthly occupancy rates as decimals in the inclusive
+                range [0, 1]. Values outside that range are rejected with a
+                per-month error identifying the offending month (R2.10).
+            </p>
+
+            <fieldset class="schedule-monthly-grid">
+                <legend class="visually-hidden">
+                    Occupancy rates, Month 1 through Month 36
+                </legend>
+
+                @for (var row = 0; row < 3; row++)
+                {
+                    <div class="schedule-monthly-grid__row">
+                        @for (var col = 0; col < 12; col++)
+                        {
+                            var monthIndex = row * 12 + col;
+                            var monthNumber = monthIndex + 1;
+                            var monthInputId = $"{idPrefix}_UserRates_{monthIndex}";
+
+                            <div class="schedule-monthly-grid__cell form-field">
+                                <label class="form-label form-label--month" for="@monthInputId">M@(monthNumber)</label>
+                                <input asp-for="UserRates[monthIndex]"
+                                       id="@monthInputId"
+                                       type="number"
+                                       step="0.01"
+                                       min="0"
+                                       max="1"
+                                       inputmode="decimal"
+                                       aria-label="Month @monthNumber" />
+                                @* R2.10 per-month error slot: InputValidator
+                                   emits errors at FieldPath
+                                   "Building.Occupancy.UserRates[{monthIndex}]"
+                                   which resolves to this ModelState key via
+                                   the current HtmlFieldPrefix. *@
+                                <span asp-validation-for="UserRates[monthIndex]"
+                                      class="field-validation-error schedule-monthly-grid__error"></span>
+                            </div>
+                        }
+                    </div>
+                }
+            </fieldset>
+        </div>
+    }
+</div>

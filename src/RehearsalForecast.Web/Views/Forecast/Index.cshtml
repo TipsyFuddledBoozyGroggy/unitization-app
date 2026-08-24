@@ -1,0 +1,495 @@
+@*
+    Views/Forecast/Index.cshtml — the eight-section input page (task 61).
+
+    Layout follows design §11.3, §13.1, §13.2, and §14.1:
+
+      * Eight labeled sections in the fixed order required by design §13.1 and
+        Requirement 17.1: Capital, Marketing, Operations, Building, Loan,
+        Taxes, Owner_Activity, Forecast_Controls.
+      * A single `@Html.AntiForgeryToken()` form POSTs to
+        `/Forecast/Calculate` and carries a single "Calculate" submit button
+        (Requirement 17.2, design §11.5).
+      * Every schedulable input renders via `_MonthlyScheduleEditor.cshtml`
+        (design §13.2). Occupancy_Rate renders via `_OccupancyEditor.cshtml`
+        (design §9.1).
+      * `Owner_Withdrawals` renders as a single constant scalar (Requirement
+        1.6, Design Decision 8) — no mode toggle.
+      * `Land_Value` renders as an input but the field help text notes it is
+        display-only (Requirement 8.5, Design Decision 1).
+      * Derived read-only fields (Payroll_Tax, Monthly_Loan_Interest,
+        Monthly_Loan_Principal, Monthly_Depreciation, Rentable_Sqft,
+        Total_Rental_Units, Rented_Units, Rented_Sqft, Monthly_Price_Per_Sqft,
+        Loan_Proceeds) are surfaced only on the Results page (design §13.1
+        "shown read-only after Calculate"); each section carries a short hint
+        pointing at that so the user knows what appears there.
+      * The validation summary partial renders at the top when errors are
+        present, and every input carries an inline `asp-validation-for` span
+        (Requirements 2.12, 17.5, design §14.1).
+
+    All validation is server-side (Requirement 2.11). No client-side JavaScript
+    is required to render or submit the form.
+*@
+@model ForecastInputViewModel
+@using RehearsalForecast.Web.Controllers
+
+@{
+    ViewData["Title"] = "Inputs";
+    var exportError = ViewData[ForecastController.ExportErrorTempDataKey] as string;
+
+    // Tab routing.
+    //
+    // The 8 numbered sections are rendered as CSS-only tabs (no JavaScript).
+    // All 8 tab-panel sections stay in the DOM so a single form POST carries
+    // every field. If validation failed on the previous submit, we jump the
+    // user to the earliest tab that has an errored field so they can see
+    // and fix it without hunting; tabs with errors are also badged in the
+    // nav.
+    var tabDefinitions = new (int Tab, string Prefix, string Slug, string Title)[]
+    {
+        (1, "Capital",          "capital",           "Capital"),
+        (2, "Marketing",        "marketing",         "Marketing"),
+        (3, "Operations",       "operations",        "Operations"),
+        (4, "Building",         "building",          "Building"),
+        (5, "Loan",             "loan",              "Loan"),
+        (6, "Taxes",            "taxes",             "Taxes"),
+        (7, "OwnerActivity",    "owner-activity",    "Owner Activity"),
+        (8, "ForecastControls", "forecast-controls", "Forecast Controls"),
+    };
+    var erroredTabs = new HashSet<int>();
+    if (!ViewData.ModelState.IsValid)
+    {
+        foreach (var (tab, prefix, _, _) in tabDefinitions)
+        {
+            var hasError = ViewData.ModelState.Keys.Any(k =>
+                (k == prefix || k.StartsWith(prefix + ".", StringComparison.Ordinal))
+                && ViewData.ModelState[k]?.Errors.Count > 0);
+            if (hasError) { erroredTabs.Add(tab); }
+        }
+    }
+    var initialTab = erroredTabs.Count > 0 ? erroredTabs.Min() : 1;
+}
+
+<h1>Rehearsal Forecast — Inputs</h1>
+
+@if (!string.IsNullOrWhiteSpace(exportError))
+{
+    @* CSV export failed at the solver stage on a prior request; surface the
+       carried-forward message so the user can adjust inputs and retry
+       (design §14.2). *@
+    <div class="alert alert-warning" role="alert">
+        @exportError
+    </div>
+}
+
+@* R2.12 / design §14.1: one summary at the top plus inline per-field spans
+   below. Rendered by `_ValidationSummaryPartial.cshtml` for reuse. *@
+<partial name="_ValidationSummaryPartial" />
+
+<form asp-controller="Forecast"
+      asp-action="Calculate"
+      method="post"
+      novalidate>
+    @Html.AntiForgeryToken()
+
+    @* ---- Tab controls (CSS-only, no JS) ---------------------------
+       Eight hidden radio inputs drive the visibility of the eight panels
+       below via `:checked ~ #panel-X` sibling selectors in site.css.
+       Every panel remains in the DOM so a single `<button>Calculate</button>`
+       at the bottom of the form submits every field. Keyboard users can
+       arrow between tabs (native radio-group behaviour); the focused
+       radio's label receives a visible focus ring via the CSS
+       `:focus-visible ~ .tab-nav label[for="tab-N"]` rule. *@
+    @foreach (var (tab, _, _, _) in tabDefinitions)
+    {
+        <input type="radio"
+               name="__tab"
+               id="@($"tab-{tab}")"
+               class="tab-radio"
+               value="@tab"
+               checked="@(initialTab == tab ? "checked" : null)" />
+    }
+
+    <nav class="tab-nav" aria-label="Input sections">
+        @foreach (var (tab, _, _, title) in tabDefinitions)
+        {
+            var labelClass = erroredTabs.Contains(tab)
+                ? "tab-nav__label tab-nav__label--errored"
+                : "tab-nav__label";
+            <label for="@($"tab-{tab}")" class="@labelClass">@title</label>
+        }
+    </nav>
+
+    @* ---- Section 1: Capital ---------------------------------------- *@
+    <section class="section tab-panel" id="panel-capital" role="tabpanel" aria-labelledby="section-capital">
+        <h2 id="section-capital">Capital</h2>
+        <p class="form-hint">
+            One-time capital outlays booked as Month 1 expenditures. The sum of
+            these four fields is <em>Total_Capital</em>; that summary value and
+            the derived <em>Loan_Proceeds</em> are shown on the results page.
+        </p>
+
+        <div class="form-field">
+            <label asp-for="Capital.Equipment" class="form-label"></label>
+            <input asp-for="Capital.Equipment"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   inputmode="decimal" />
+            <span asp-validation-for="Capital.Equipment" class="field-validation-error"></span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="Capital.TotalImprovementCost" class="form-label"></label>
+            <input asp-for="Capital.TotalImprovementCost"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   inputmode="decimal" />
+            <span asp-validation-for="Capital.TotalImprovementCost" class="field-validation-error"></span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="Capital.BuildingPurchaseCost" class="form-label"></label>
+            <input asp-for="Capital.BuildingPurchaseCost"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   inputmode="decimal" />
+            <span asp-validation-for="Capital.BuildingPurchaseCost" class="field-validation-error"></span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="Capital.OtherCapitalCost" class="form-label"></label>
+            <input asp-for="Capital.OtherCapitalCost"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   inputmode="decimal" />
+            <span asp-validation-for="Capital.OtherCapitalCost" class="field-validation-error"></span>
+        </div>
+    </section>
+
+    @* ---- Section 2: Marketing -------------------------------------- *@
+    <section class="section tab-panel" id="panel-marketing" role="tabpanel" aria-labelledby="section-marketing">
+        <h2 id="section-marketing">Marketing</h2>
+        <p class="form-hint">
+            Four marketing line items. Each may be entered as a single constant
+            applied to every month, or as an explicit 36-month schedule.
+        </p>
+
+        <div class="form-field">
+            <span class="form-label">Print</span>
+            <partial name="_MonthlyScheduleEditor" for="Marketing.Print" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Search</span>
+            <partial name="_MonthlyScheduleEditor" for="Marketing.Search" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Social</span>
+            <partial name="_MonthlyScheduleEditor" for="Marketing.Social" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Other Marketing</span>
+            <partial name="_MonthlyScheduleEditor" for="Marketing.OtherMarketing" />
+        </div>
+    </section>
+
+    @* ---- Section 3: Operations ------------------------------------- *@
+    <section class="section tab-panel" id="panel-operations" role="tabpanel" aria-labelledby="section-operations">
+        <h2 id="section-operations">Operations</h2>
+        <p class="form-hint">
+            Fourteen operational line items. Each may be entered as a constant
+            or a 36-month schedule. <em>Payroll_Tax</em> is derived from
+            <em>Wages</em> (Wages × 0.0765) and is shown on the results page —
+            it is not a user input.
+        </p>
+
+        <div class="form-field">
+            <span class="form-label">Accounting</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.Accounting" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Custodial</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.Custodial" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Gas</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.Gas" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Insurance</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.Insurance" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">IT</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.It" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Office Supplies</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.OfficeSupplies" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Professional Services</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.ProfessionalServices" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Rent Expense</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.RentExpense" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Repairs</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.Repairs" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Shipping</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.Shipping" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Property Tax</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.PropertyTax" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Utilities</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.Utilities" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Wages</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.Wages" />
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Other Operations</span>
+            <partial name="_MonthlyScheduleEditor" for="Operations.OtherOperations" />
+        </div>
+    </section>
+
+    @* ---- Section 4: Building --------------------------------------- *@
+    <section class="section tab-panel" id="panel-building" role="tabpanel" aria-labelledby="section-building">
+        <h2 id="section-building">Building</h2>
+        <p class="form-hint">
+            Building geometry, the depreciable cost, and the occupancy
+            schedule. Derived values <em>Rentable_Sqft</em>,
+            <em>Total_Rental_Units</em>, <em>Rented_Units</em>,
+            <em>Rented_Sqft</em>, and <em>Monthly_Depreciation</em> appear on
+            the results page after Calculate.
+        </p>
+
+        <div class="form-field">
+            <label asp-for="Building.TotalSqft" class="form-label"></label>
+            <input asp-for="Building.TotalSqft"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   inputmode="decimal" />
+            <span asp-validation-for="Building.TotalSqft" class="field-validation-error"></span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="Building.PercentageAvailableForRent" class="form-label"></label>
+            <input asp-for="Building.PercentageAvailableForRent"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   max="1"
+                   inputmode="decimal" />
+            <span class="form-hint">Decimal in the inclusive range [0, 1] (e.g. 0.75 = 75%).</span>
+            <span asp-validation-for="Building.PercentageAvailableForRent" class="field-validation-error"></span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="Building.TotalBuildingCost" class="form-label"></label>
+            <input asp-for="Building.TotalBuildingCost"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   inputmode="decimal" />
+            <span class="form-hint">
+                Depreciable building cost. Drives Monthly_Depreciation =
+                Total_Building_Cost ÷ (Depreciation_Period_Years × 12).
+            </span>
+            <span asp-validation-for="Building.TotalBuildingCost" class="field-validation-error"></span>
+        </div>
+
+        @* Requirement 8.5 / Design Decision 1: Land_Value is captured but is
+           never referenced in any calculation. The hint below makes that
+           explicit so the user does not expect it to affect depreciation or
+           the target price. *@
+        <div class="form-field">
+            <label asp-for="Building.LandValue"
+                   class="form-label"
+                   title="Display-only. Not used in any calculation in this phase (Requirement 8.5)."></label>
+            <input asp-for="Building.LandValue"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   inputmode="decimal"
+                   aria-describedby="land-value-hint"
+                   title="Display-only. Not used in any calculation in this phase (Requirement 8.5)." />
+            <span id="land-value-hint" class="form-hint">
+                Display-only. Captured for reporting; not used in any calculation in this phase.
+            </span>
+            <span asp-validation-for="Building.LandValue" class="field-validation-error"></span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="Building.DepreciationPeriodYears" class="form-label"></label>
+            <input asp-for="Building.DepreciationPeriodYears"
+                   type="number"
+                   step="1"
+                   min="1"
+                   inputmode="numeric" />
+            <span asp-validation-for="Building.DepreciationPeriodYears" class="field-validation-error"></span>
+        </div>
+
+        <div class="form-field">
+            <span class="form-label">Occupancy Rate</span>
+            <span class="form-hint">
+                Default schedule uses the built-in ramp Min(month × 0.10, 1.00);
+                switch to Variable to enter 36 custom monthly rates.
+            </span>
+            <partial name="_OccupancyEditor" for="Building.Occupancy" />
+        </div>
+    </section>
+
+    @* ---- Section 5: Loan ------------------------------------------- *@
+    <section class="section tab-panel" id="panel-loan" role="tabpanel" aria-labelledby="section-loan">
+        <h2 id="section-loan">Loan</h2>
+        <p class="form-hint">
+            Interest rate and term. <em>Loan_Proceeds</em>,
+            <em>Monthly_Loan_Interest</em>, and
+            <em>Monthly_Loan_Principal</em> are derived and appear on the
+            results page after Calculate; they are not user inputs.
+        </p>
+
+        <div class="form-field">
+            <label asp-for="Loan.AnnualLoanInterestRate" class="form-label"></label>
+            <input asp-for="Loan.AnnualLoanInterestRate"
+                   type="number"
+                   step="0.0001"
+                   min="0"
+                   inputmode="decimal" />
+            <span class="form-hint">Decimal (e.g. 0.065 = 6.5% per year).</span>
+            <span asp-validation-for="Loan.AnnualLoanInterestRate" class="field-validation-error"></span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="Loan.LoanTermMonths" class="form-label"></label>
+            <input asp-for="Loan.LoanTermMonths"
+                   type="number"
+                   step="1"
+                   min="1"
+                   inputmode="numeric" />
+            <span asp-validation-for="Loan.LoanTermMonths" class="field-validation-error"></span>
+        </div>
+    </section>
+
+    @* ---- Section 6: Taxes ------------------------------------------ *@
+    <section class="section tab-panel" id="panel-taxes" role="tabpanel" aria-labelledby="section-taxes">
+        <h2 id="section-taxes">Taxes</h2>
+        <p class="form-hint">
+            Only <em>Income_Tax_Rate</em> is a user input.
+            <em>Payroll_Tax</em> is derived at the fixed rate 0.0765 applied to
+            Wages (Requirement 7.2) and appears on the results page.
+        </p>
+
+        <div class="form-field">
+            <label asp-for="Taxes.IncomeTaxRate" class="form-label"></label>
+            <input asp-for="Taxes.IncomeTaxRate"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   max="1"
+                   inputmode="decimal" />
+            <span class="form-hint">Decimal in the inclusive range [0, 1] (e.g. 0.25 = 25%).</span>
+            <span asp-validation-for="Taxes.IncomeTaxRate" class="field-validation-error"></span>
+        </div>
+    </section>
+
+    @* ---- Section 7: Owner Activity --------------------------------- *@
+    <section class="section tab-panel" id="panel-owner-activity" role="tabpanel" aria-labelledby="section-owner-activity">
+        <h2 id="section-owner-activity">Owner Activity</h2>
+        <p class="form-hint">
+            Owner_Investment is a Month 1 cash contribution. Owner_Withdrawals
+            is a single constant per-month value applied uniformly to every
+            month (Requirement 1.6, Design Decision 8) — this section
+            intentionally does not expose a Constant/Variable toggle.
+        </p>
+
+        <div class="form-field">
+            <label asp-for="OwnerActivity.OwnerInvestment" class="form-label"></label>
+            <input asp-for="OwnerActivity.OwnerInvestment"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   inputmode="decimal" />
+            <span asp-validation-for="OwnerActivity.OwnerInvestment" class="field-validation-error"></span>
+        </div>
+
+        @* R1.6 / DD8: OwnerWithdrawals is a scalar. No _MonthlyScheduleEditor
+           partial here; render as a plain numeric input. *@
+        <div class="form-field">
+            <label asp-for="OwnerActivity.OwnerWithdrawals" class="form-label"></label>
+            <input asp-for="OwnerActivity.OwnerWithdrawals"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   inputmode="decimal" />
+            <span class="form-hint">
+                Constant amount subtracted from cash every month, Month 1 through Month 36.
+            </span>
+            <span asp-validation-for="OwnerActivity.OwnerWithdrawals" class="field-validation-error"></span>
+        </div>
+    </section>
+
+    @* ---- Section 8: Forecast Controls ------------------------------ *@
+    <section class="section tab-panel" id="panel-forecast-controls" role="tabpanel" aria-labelledby="section-forecast-controls">
+        <h2 id="section-forecast-controls">Forecast Controls</h2>
+        <p class="form-hint">
+            Opening cash balance and the month by which the business must
+            reach a sustained cash-positive state through Month 36.
+        </p>
+
+        <div class="form-field">
+            <label asp-for="ForecastControls.BeginningCashMonth1" class="form-label"></label>
+            <input asp-for="ForecastControls.BeginningCashMonth1"
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   inputmode="decimal" />
+            <span asp-validation-for="ForecastControls.BeginningCashMonth1" class="field-validation-error"></span>
+        </div>
+
+        <div class="form-field">
+            <label asp-for="ForecastControls.TargetCashPositiveMonth" class="form-label"></label>
+            <input asp-for="ForecastControls.TargetCashPositiveMonth"
+                   type="number"
+                   step="1"
+                   min="1"
+                   max="36"
+                   inputmode="numeric" />
+            <span class="form-hint">Integer in the inclusive range [1, 36].</span>
+            <span asp-validation-for="ForecastControls.TargetCashPositiveMonth" class="field-validation-error"></span>
+        </div>
+    </section>
+
+    @* ---- Single Calculate action (Requirement 17.2, design §11.5) -- *@
+    <div class="form-actions">
+        <button type="submit" class="btn">Calculate</button>
+    </div>
+</form>

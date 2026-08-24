@@ -1,0 +1,10 @@
+@*
+    Reusable validation summary partial (design §14.1).
+
+    Renders every ModelState error — including field-level errors mirrored
+    from InputValidator — at the top of the page (Requirement 2.12). Uses
+    asp-validation-summary="All" so that both model-level and property-level
+    errors are surfaced together, matching the "one summary at top plus inline
+    per-field" pattern described in design §14.1.
+*@
+<div asp-validation-summary="All" class="validation-summary" role="alert"></div>

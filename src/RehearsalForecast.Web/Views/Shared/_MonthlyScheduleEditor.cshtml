@@ -1,0 +1,137 @@
+@*
+    _MonthlyScheduleEditor.cshtml — reusable editor for a MonthlyScheduleViewModel
+    (design §13.2, §9.1).
+
+    Renders:
+      * A [Constant | Variable] radio group (R1.1). The active mode is visually
+        distinguishable via the `active-label` class on the label and a subtle
+        background shade on the active subform (R1.5).
+      * When Constant: a single numeric input for `ConstantValue` and its
+        inline validation slot.
+      * When Variable: a 12×3 grid of 36 numeric inputs (Months 1..12, 13..24,
+        25..36) each carrying `aria-label="Month {m}"` (R1.4). Each cell has
+        its own inline per-month error slot so validator messages naming a
+        specific month (R2.9, R2.10) surface next to the offending input.
+
+    Server-side round-trip drives the deliberate mode switch (R1.3, R4.6):
+    the controller pre-populates the destination fields on receipt of the
+    Constant→Variable transition. Client-side JavaScript is not required.
+
+    Invocation pattern (from Views/Forecast/Index.cshtml):
+
+        <partial name="_MonthlyScheduleEditor" for="Marketing.Print" />
+
+    The parent `for` expression sets `ViewData.TemplateInfo.HtmlFieldPrefix`
+    (e.g. "Marketing.Print"), which the tag helpers combine with `asp-for`
+    values below to produce fully qualified field names such as
+    `Marketing.Print.Mode`, `Marketing.Print.ConstantValue`, and
+    `Marketing.Print.MonthlyValues[0..35]`. Those names match what
+    `MonthlyScheduleModelBinder` reads on POST (design §9.4, §11.4).
+*@
+@model MonthlyScheduleViewModel
+
+@{
+    // Turn the dotted/indexed HTML field prefix (e.g. "Marketing.Print" or
+    // "Operations.Wages") into a safe id fragment so radios and inputs get
+    // unique DOM ids across the eight input sections.
+    var prefix = ViewData.TemplateInfo.HtmlFieldPrefix ?? string.Empty;
+    var idPrefix = string.IsNullOrEmpty(prefix)
+        ? "MonthlySchedule"
+        : prefix
+            .Replace('.', '_')
+            .Replace('[', '_')
+            .Replace(']', '_');
+
+    var constantRadioId = $"{idPrefix}_Mode_Constant";
+    var variableRadioId = $"{idPrefix}_Mode_Variable";
+
+    var isConstant = Model.Mode == ScheduleMode.Constant;
+    var isVariable = Model.Mode == ScheduleMode.Variable;
+
+    var constantLabelClass = isConstant
+        ? "schedule-mode-label active-label"
+        : "schedule-mode-label";
+    var variableLabelClass = isVariable
+        ? "schedule-mode-label active-label"
+        : "schedule-mode-label";
+
+    var constantSubformClass = isConstant
+        ? "schedule-subform schedule-subform--constant schedule-subform--active"
+        : "schedule-subform schedule-subform--constant";
+    var variableSubformClass = isVariable
+        ? "schedule-subform schedule-subform--variable schedule-subform--active"
+        : "schedule-subform schedule-subform--variable";
+}
+
+<div class="monthly-schedule-editor" data-schedule-mode="@Model.Mode">
+    <div class="schedule-mode-toggle" role="radiogroup" aria-label="Input mode">
+        <label class="@constantLabelClass" for="@constantRadioId">
+            <input type="radio"
+                   asp-for="Mode"
+                   value="@ScheduleMode.Constant"
+                   id="@constantRadioId" />
+            <span>Constant</span>
+        </label>
+
+        <label class="@variableLabelClass" for="@variableRadioId">
+            <input type="radio"
+                   asp-for="Mode"
+                   value="@ScheduleMode.Variable"
+                   id="@variableRadioId" />
+            <span>Variable</span>
+        </label>
+
+        <span asp-validation-for="Mode" class="field-validation-error"></span>
+    </div>
+
+    @if (isConstant)
+    {
+        <div class="@constantSubformClass">
+            <div class="form-field">
+                <label asp-for="ConstantValue" class="form-label">Value</label>
+                <input asp-for="ConstantValue"
+                       type="number"
+                       step="0.01"
+                       inputmode="decimal" />
+                <span asp-validation-for="ConstantValue" class="field-validation-error"></span>
+            </div>
+        </div>
+    }
+    else
+    {
+        @* Preserve the previously entered constant value across a Variable
+           round-trip so the controller can restore it on a Variable→Constant
+           switch without dropping user data. *@
+        <input type="hidden" asp-for="ConstantValue" />
+
+        <div class="@variableSubformClass">
+            <fieldset class="schedule-monthly-grid">
+                <legend class="visually-hidden">Monthly values, Month 1 through Month 36</legend>
+
+                @for (var row = 0; row < 3; row++)
+                {
+                    <div class="schedule-monthly-grid__row">
+                        @for (var col = 0; col < 12; col++)
+                        {
+                            var monthIndex = row * 12 + col;
+                            var monthNumber = monthIndex + 1;
+                            var monthInputId = $"{idPrefix}_MonthlyValues_{monthIndex}";
+
+                            <div class="schedule-monthly-grid__cell form-field">
+                                <label class="form-label form-label--month" for="@monthInputId">M@(monthNumber)</label>
+                                <input asp-for="MonthlyValues[monthIndex]"
+                                       id="@monthInputId"
+                                       type="number"
+                                       step="0.01"
+                                       inputmode="decimal"
+                                       aria-label="Month @monthNumber" />
+                                <span asp-validation-for="MonthlyValues[monthIndex]"
+                                      class="field-validation-error schedule-monthly-grid__error"></span>
+                            </div>
+                        }
+                    </div>
+                }
+            </fieldset>
+        </div>
+    }
+</div>

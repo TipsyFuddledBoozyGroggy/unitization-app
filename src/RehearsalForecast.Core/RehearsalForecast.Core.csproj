@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RootNamespace>RehearsalForecast.Core</RootNamespace>
+    <AssemblyName>RehearsalForecast.Core</AssemblyName>
+    <!--
+      Emits the XML documentation file for RehearsalForecast.Core.xml and
+      surfaces CS1591 (missing XML comment on a publicly visible type or
+      member) as a warning. Combined with TreatWarningsAsErrors=true above,
+      any undocumented public API in the Core project fails the build.
+      This enforces Requirement 26.3 (documentation of the public API).
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Exposes `internal` calculation helpers to the xUnit test project so
+      per-pass helpers (Forecast/BuildingGeometryCalculator, etc.) can be
+      exercised directly without widening their visibility to `public`.
+    -->
+    <InternalsVisibleTo Include="RehearsalForecast.Core.Tests" />
+  </ItemGroup>
+
+</Project>
