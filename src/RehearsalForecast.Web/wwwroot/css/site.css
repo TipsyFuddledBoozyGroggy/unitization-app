@@ -186,7 +186,8 @@ input.btn:not(.btn-primary):not(.btn-secondary):not(.btn-outline-secondary):focu
     margin-bottom: 1.5rem;
 }
 
-.validation-summary:empty {
+.validation-summary:empty,
+.validation-summary-valid {
     display: none;
 }
 
