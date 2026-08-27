@@ -35,6 +35,7 @@
 @{
     ViewData["Title"] = "Inputs";
     var exportError = ViewData[ForecastController.ExportErrorTempDataKey] as string;
+    var resultsExpired = ViewData[ForecastController.ResultsExpiredTempDataKey] as string;
 
     // Tab routing.
     //
@@ -78,6 +79,16 @@
        (design §14.2). *@
     <div class="alert alert-warning" role="alert">
         @exportError
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(resultsExpired))
+{
+    @* A prior PRG-cached results entry has aged out or was addressed with a
+       stale/invalid id; surface the notice so the user understands why the
+       bookmarked or reloaded results URL is no longer live. *@
+    <div class="alert alert-info" role="alert">
+        @resultsExpired
     </div>
 }
 

@@ -46,6 +46,21 @@ builder.Services.AddScoped<ISolver, PriceSolver>();
 builder.Services.AddScoped<IInputValidator, InputValidator>();
 builder.Services.AddScoped<ICsvExporter, CsvExporter>();
 
+// --- Post-Redirect-Get result cache ---------------------------------------
+// The Calculate action stores its ForecastResultViewModel under a GUID key
+// and redirects to a GET /Forecast/Results/{id} action which reads back the
+// entry. This makes the results page bookmark-safe and refresh-safe, and
+// eliminates the pre-PRG "405 Method Not Allowed" the browser produced when
+// the results URL was reloaded as a GET. Entries expire automatically
+// (see ForecastController.ResultCacheTtl); on expiry the GET action
+// redirects to the input page with a user-facing notice.
+//
+// NOTE: IMemoryCache is per-instance. This is safe today because the app
+// runs with instance_count = 1; horizontal scale-out would require sticky
+// sessions or a distributed cache (Redis, etc.) to keep the POST-side
+// stash reachable from the GET-side lookup.
+builder.Services.AddMemoryCache();
+
 // --- Request-localization: pin en-US (design §20.3, §20.5) -----------------
 var supportedCultures = new[] { CultureInfo.CreateSpecificCulture("en-US") };
 builder.Services.Configure<RequestLocalizationOptions>(options =>

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using RehearsalForecast.Core.Export;
 using RehearsalForecast.Core.Solving;
 using RehearsalForecast.Core.Validation;
@@ -22,18 +23,28 @@ namespace RehearsalForecast.Web.Controllers;
 /// (Requirements 2.13, 27.9).
 /// </para>
 /// <para>
-/// The results page round-trips the original inputs so the "Export CSV" form
-/// can re-run the same pipeline on POST — the controller never persists state
-/// between requests (design §11.6, Requirement 18.8).
+/// The results page follows the Post-Redirect-Get pattern: a successful
+/// <see cref="Calculate(ForecastInputViewModel)"/> POST caches the produced
+/// <see cref="ForecastResultViewModel"/> under a fresh <see cref="Guid"/>
+/// key in <see cref="IMemoryCache"/> and 302-redirects to
+/// <see cref="Results"/>, which renders the results view. This makes the
+/// results URL bookmark-safe and refresh-safe (revised design §11.6). The
+/// cached entry is subject to <see cref="ResultCacheTtl"/>; on expiry the
+/// GET action redirects to <see cref="Index"/> with a TempData-carried
+/// notice. The old inline hidden-form round-trip on the results page is
+/// retained only so <see cref="ExportCsv"/> can rebind the exact same view
+/// model deterministically without a second cache lookup.
 /// </para>
 /// <para>
 /// When the solver breaches its safety limit (Requirement 15.11), the
-/// <see cref="Calculate"/> action renders the results view with a populated
-/// <see cref="ForecastResultViewModel.SolverFailureMessage"/> and a null
-/// <see cref="ForecastResultViewModel.Result"/> (Requirement 27.7);
-/// <see cref="ExportCsv"/> redirects back to <see cref="Index"/> with a
-/// TempData-carried error message and refuses to emit CSV (design §14.2,
-/// Requirement 18.8).
+/// same PRG flow applies: <see cref="Calculate(ForecastInputViewModel)"/>
+/// caches a <see cref="ForecastResultViewModel"/> whose
+/// <see cref="ForecastResultViewModel.SolverFailureMessage"/> is populated
+/// and whose <see cref="ForecastResultViewModel.Result"/> is
+/// <see langword="null"/> (Requirement 27.7), then redirects to
+/// <see cref="Results"/>; <see cref="ExportCsv"/> redirects back to
+/// <see cref="Index"/> with a TempData-carried error message and refuses to
+/// emit CSV (design §14.2, Requirement 18.8).
 /// </para>
 /// </remarks>
 public sealed class ForecastController : Controller
@@ -41,25 +52,38 @@ public sealed class ForecastController : Controller
     private readonly IInputValidator _validator;
     private readonly ISolver _solver;
     private readonly ICsvExporter _csvExporter;
+    private readonly IMemoryCache _resultCache;
 
     /// <summary>TempData key used by <see cref="ExportCsv"/> to surface a solver-failure banner on the redirected input page.</summary>
     internal const string ExportErrorTempDataKey = "ExportError";
 
+    /// <summary>TempData key used by <see cref="Results"/> to surface a "results expired" notice on the redirected input page.</summary>
+    internal const string ResultsExpiredTempDataKey = "ResultsExpired";
+
+    /// <summary>Prefix applied to the <see cref="IMemoryCache"/> key so cache entries produced by this controller are namespaced.</summary>
+    private const string ResultCacheKeyPrefix = "forecast:result:";
+
+    /// <summary>How long a cached <see cref="ForecastResultViewModel"/> remains addressable via <see cref="Results"/>. Chosen to comfortably outlast a normal user flow (review, then Export CSV) while still bounding memory use.</summary>
+    private static readonly TimeSpan ResultCacheTtl = TimeSpan.FromMinutes(15);
+
     /// <summary>
-    /// Constructs the controller with the three Core services it depends on.
-    /// The calculator is intentionally not injected here — <see cref="ISolver"/>
-    /// owns the calculator internally (design §4.3) and produces the
-    /// <see cref="Core.Forecast.ForecastResult"/> as part of
-    /// <see cref="SolverResult.Success"/>.
+    /// Constructs the controller with the three Core services it depends on
+    /// plus the <see cref="IMemoryCache"/> that backs the Post-Redirect-Get
+    /// flow. The calculator is intentionally not injected here —
+    /// <see cref="ISolver"/> owns the calculator internally (design §4.3)
+    /// and produces the <see cref="Core.Forecast.ForecastResult"/> as part
+    /// of <see cref="SolverResult.Success"/>.
     /// </summary>
     public ForecastController(
         IInputValidator validator,
         ISolver solver,
-        ICsvExporter csvExporter)
+        ICsvExporter csvExporter,
+        IMemoryCache resultCache)
     {
         _validator = validator;
         _solver = solver;
         _csvExporter = csvExporter;
+        _resultCache = resultCache;
     }
 
     /// <summary>
@@ -78,18 +102,21 @@ public sealed class ForecastController : Controller
             ViewData[ExportErrorTempDataKey] = exportError;
         }
 
+        if (TempData[ResultsExpiredTempDataKey] is string resultsExpired)
+        {
+            ViewData[ResultsExpiredTempDataKey] = resultsExpired;
+        }
+
         return View(new ForecastInputViewModel());
     }
 
     /// <summary>
-    /// Graceful GET fallback for <see cref="Calculate"/>. Because
-    /// <see cref="Calculate"/> returns <see cref="Controller.View(string, object)"/>
-    /// directly (non-PRG), a successful submit leaves the browser at URL
-    /// <c>/Forecast/Calculate</c>. Any subsequent GET against that URL
-    /// (refresh dismissing the resubmit dialog, bookmark, direct navigation,
-    /// bfcache reload) would otherwise hit the POST-only action and produce
-    /// <c>405 Method Not Allowed</c>. Redirecting to <see cref="Index"/>
-    /// converts that dead-end into a fresh input page.
+    /// Graceful GET fallback for <see cref="Calculate(ForecastInputViewModel)"/>.
+    /// The POST action redirects to <see cref="Results"/>, so no legitimate
+    /// user flow ends at <c>/Forecast/Calculate</c> under GET. This fallback
+    /// still exists as a safety net for stale bookmarks that predate the
+    /// Post-Redirect-Get switch — those requests get a 302 to
+    /// <see cref="Index"/> instead of <c>405 Method Not Allowed</c>.
     /// </summary>
     [HttpGet]
     public IActionResult Calculate() => RedirectToAction(nameof(Index));
@@ -104,13 +131,23 @@ public sealed class ForecastController : Controller
     public IActionResult ExportCsv() => RedirectToAction(nameof(Index));
 
     /// <summary>
-    /// Runs the validate-then-solve pipeline and renders either
-    /// <c>Index.cshtml</c> (on validation failure, preserving inputs and error
-    /// messages per R2.12 and R17.5) or <c>Results.cshtml</c> (on solver
-    /// success or solver failure — the latter with
-    /// <see cref="ForecastResultViewModel.SolverFailureMessage"/> populated
-    /// and <see cref="ForecastResultViewModel.Result"/> null per R27.7).
+    /// Runs the validate-then-solve pipeline and, on validation success,
+    /// caches the produced <see cref="ForecastResultViewModel"/> and
+    /// 302-redirects to <see cref="Results"/> under the Post-Redirect-Get
+    /// pattern (revised design §11.6). On validation failure the input
+    /// page is re-rendered inline with preserved inputs and error messages
+    /// (R2.12, R17.5); the calculator and solver MUST NOT be invoked in
+    /// that path (R2.13, R27.9).
     /// </summary>
+    /// <remarks>
+    /// Solver failure (Requirement 15.11) uses the same PRG flow: a
+    /// <see cref="ForecastResultViewModel"/> whose
+    /// <see cref="ForecastResultViewModel.SolverFailureMessage"/> is
+    /// populated and whose <see cref="ForecastResultViewModel.Result"/> is
+    /// <see langword="null"/> is cached and redirected to
+    /// <see cref="Results"/>, which renders the failure banner
+    /// (Requirement 27.7).
+    /// </remarks>
     /// <param name="vm">The form-bound input view model.</param>
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -125,26 +162,63 @@ public sealed class ForecastController : Controller
 
         var solverResult = _solver.Solve(vm.ToDomain());
 
-        return solverResult switch
+        var resultVm = solverResult switch
         {
-            SolverResult.Success success => View(
-                "Results",
-                new ForecastResultViewModel
-                {
-                    Inputs = vm,
-                    Result = success.Forecast,
-                }),
-            SolverResult.Failure failure => View(
-                "Results",
-                new ForecastResultViewModel
-                {
-                    Inputs = vm,
-                    Result = null,
-                    SolverFailureMessage = BuildSolverFailureMessage(failure),
-                }),
+            SolverResult.Success success => new ForecastResultViewModel
+            {
+                Inputs = vm,
+                Result = success.Forecast,
+            },
+            SolverResult.Failure failure => new ForecastResultViewModel
+            {
+                Inputs = vm,
+                Result = null,
+                SolverFailureMessage = BuildSolverFailureMessage(failure),
+            },
             _ => throw new InvalidOperationException(
                 $"Unexpected {nameof(SolverResult)} variant: {solverResult.GetType().Name}."),
         };
+
+        // PRG stash: cache the produced view model under a fresh GUID and
+        // hand that GUID to the browser via the redirect. The GET Results
+        // action re-reads the entry on the follow-up request. The cache
+        // entry is refresh-safe (repeated GETs within the TTL return the
+        // same page) and self-expires so long-idle entries do not pile up.
+        var id = Guid.NewGuid();
+        _resultCache.Set(ResultCacheKeyPrefix + id, resultVm, ResultCacheTtl);
+        return RedirectToAction(nameof(Results), new { id });
+    }
+
+    /// <summary>
+    /// Renders the results page from a PRG-cached
+    /// <see cref="ForecastResultViewModel"/>. The <paramref name="id"/> is
+    /// the <see cref="Guid"/> stashed by
+    /// <see cref="Calculate(ForecastInputViewModel)"/>. When
+    /// <paramref name="id"/> is missing or the cache entry has expired,
+    /// the user is redirected to <see cref="Index"/>; on expiry a
+    /// TempData-carried notice is surfaced so the user understands why
+    /// their bookmarked / reloaded URL is no longer live.
+    /// </summary>
+    /// <param name="id">The PRG cache key produced by the POST action.</param>
+    [HttpGet]
+    public IActionResult Results(Guid? id)
+    {
+        if (id is null || id == Guid.Empty)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (!_resultCache.TryGetValue<ForecastResultViewModel>(
+                ResultCacheKeyPrefix + id.Value,
+                out var resultVm)
+            || resultVm is null)
+        {
+            TempData[ResultsExpiredTempDataKey] =
+                "Your results are no longer available. Please re-enter your inputs and click Calculate again.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(resultVm);
     }
 
     /// <summary>
