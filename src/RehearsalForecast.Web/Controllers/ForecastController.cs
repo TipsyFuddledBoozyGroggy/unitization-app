@@ -82,6 +82,28 @@ public sealed class ForecastController : Controller
     }
 
     /// <summary>
+    /// Graceful GET fallback for <see cref="Calculate"/>. Because
+    /// <see cref="Calculate"/> returns <see cref="Controller.View(string, object)"/>
+    /// directly (non-PRG), a successful submit leaves the browser at URL
+    /// <c>/Forecast/Calculate</c>. Any subsequent GET against that URL
+    /// (refresh dismissing the resubmit dialog, bookmark, direct navigation,
+    /// bfcache reload) would otherwise hit the POST-only action and produce
+    /// <c>405 Method Not Allowed</c>. Redirecting to <see cref="Index"/>
+    /// converts that dead-end into a fresh input page.
+    /// </summary>
+    [HttpGet]
+    public IActionResult Calculate() => RedirectToAction(nameof(Index));
+
+    /// <summary>
+    /// Graceful GET fallback for <see cref="ExportCsv"/>. Same rationale as
+    /// <see cref="Calculate()"/>: prevents a bare GET (bookmark, refresh, or
+    /// direct navigation) from returning <c>405 Method Not Allowed</c> by
+    /// redirecting to <see cref="Index"/>.
+    /// </summary>
+    [HttpGet]
+    public IActionResult ExportCsv() => RedirectToAction(nameof(Index));
+
+    /// <summary>
     /// Runs the validate-then-solve pipeline and renders either
     /// <c>Index.cshtml</c> (on validation failure, preserving inputs and error
     /// messages per R2.12 and R17.5) or <c>Results.cshtml</c> (on solver
